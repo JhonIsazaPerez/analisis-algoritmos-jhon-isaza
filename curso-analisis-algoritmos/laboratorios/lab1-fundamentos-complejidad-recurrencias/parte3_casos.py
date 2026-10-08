@@ -6,6 +6,7 @@ entrada, y grafica el numero de comparaciones y el tiempo de ejecucion
 de cada escenario.
 """
 
+import statistics
 import time
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from algoritmos import insertion_sort
 from datos import generar_aleatorio, generar_casi_ordenado, generar_inverso
 
 TAMANIOS = [100, 200, 400, 800, 1600, 3200, 6400]
+REPETICIONES = 5
 CARPETA_GRAFICAS = Path(__file__).parent / "graficas"
 
 ESCENARIOS = {
@@ -33,9 +35,16 @@ COLORES = {
 def ejecutar_experimento() -> dict[str, dict[str, list[float]]]:
     """Corre insertion sort sobre los tres escenarios y cada tamano.
 
+    El tiempo se mide REPETICIONES veces por cada combinacion de
+    escenario y tamano, sobre el mismo lote de datos, y se reporta el
+    promedio para suavizar el ruido de medicion. El numero de
+    comparaciones es deterministico para un lote dado, por lo que se
+    registra una sola vez.
+
     Returns:
         Un diccionario por nombre de escenario, con las listas de
-        tiempo (segundos) y comparaciones registradas por tamano.
+        tiempo promedio (segundos) y comparaciones registradas por
+        tamano.
     """
     resultados = {nombre: {"tiempo": [], "comparaciones": []} for nombre in ESCENARIOS}
 
@@ -44,13 +53,20 @@ def ejecutar_experimento() -> dict[str, dict[str, list[float]]]:
         for nombre, generador in ESCENARIOS.items():
             datos = generador(n)
 
-            inicio = time.perf_counter()
-            _, comparaciones = insertion_sort(datos)
-            duracion = time.perf_counter() - inicio
+            tiempos = []
+            comparaciones = None
+            for _ in range(REPETICIONES):
+                inicio = time.perf_counter()
+                _, comparaciones = insertion_sort(datos)
+                tiempos.append(time.perf_counter() - inicio)
 
-            resultados[nombre]["tiempo"].append(duracion)
+            duracion_promedio = statistics.mean(tiempos)
+            resultados[nombre]["tiempo"].append(duracion_promedio)
             resultados[nombre]["comparaciones"].append(comparaciones)
-            print(f"  {nombre}: {duracion:.6f} s, {comparaciones} comparaciones")
+            print(
+                f"  {nombre}: {duracion_promedio:.6f} s "
+                f"(promedio de {REPETICIONES}), {comparaciones} comparaciones"
+            )
 
     return resultados
 
@@ -100,7 +116,7 @@ def graficar_tiempo(resultados: dict) -> None:
         resultados,
         clave="tiempo",
         titulo="Insertion sort: tiempo de ejecucion vs. tamano de entrada",
-        etiqueta_y="Tiempo de ejecucion (segundos)",
+        etiqueta_y=f"Tiempo de ejecucion (segundos, promedio de {REPETICIONES} repeticiones)",
         nombre_archivo="parte3_tiempo.png",
     )
 

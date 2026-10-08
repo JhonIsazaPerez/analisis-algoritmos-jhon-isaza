@@ -51,6 +51,11 @@ def merge_sort(datos: list[int]) -> tuple[list[int], int]:
 def _dividir(datos: list[int], inicio: int, fin: int) -> int:
     """Divide recursivamente el tramo [inicio, fin] y mezcla los resultados.
 
+    Args:
+        datos: lista sobre la que se ordena el tramo, modificada in place.
+        inicio: indice inicial (incluido) del tramo a dividir.
+        fin: indice final (incluido) del tramo a dividir.
+
     Returns:
         El numero de comparaciones realizadas al mezclar este tramo.
     """
@@ -66,6 +71,15 @@ def _dividir(datos: list[int], inicio: int, fin: int) -> int:
 
 def _mezclar(datos: list[int], inicio: int, medio: int, fin: int) -> int:
     """Mezcla dos tramos ordenados [inicio, medio] y [medio+1, fin].
+
+    Modifica `datos` in place para dejar el tramo [inicio, fin] ordenado.
+
+    Args:
+        datos: lista que contiene ambos tramos, modificada in place.
+        inicio: indice inicial (incluido) del primer tramo.
+        medio: indice final (incluido) del primer tramo; el segundo
+            tramo empieza en medio + 1.
+        fin: indice final (incluido) del segundo tramo.
 
     Returns:
         El numero de comparaciones entre elementos de los dos tramos.
